@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tinyclaw Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0f14; }
+    .wrap { height: 100%; display: flex; flex-direction: column; }
+    .bar {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      color: #c7d2e0;
+      font: 13px/1.2 Consolas, "Cascadia Code", monospace;
+      border-bottom: 1px solid #1b2633;
+      background: #0f1620;
+    }
+    #terminal { flex: 1; padding: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar" id="status">connecting...</div>
+    <div id="terminal"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <script>
+    const status = document.getElementById('status');
+    const terminal = new Terminal({
+      cursorBlink: true,
+      convertEol: true,
+      fontFamily: 'Consolas, "Cascadia Code", monospace',
+      fontSize: 14,
+      theme: {
+        background: '#0b0f14',
+        foreground: '#d8e1ea'
+      }
+    });
+
+    terminal.open(document.getElementById('terminal'));
+    terminal.focus();
+
+    const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+    const qs = new URLSearchParams(location.search);
+    const channelId = qs.get('channel_id');
+    const path = channelId ? `/ws/terminal/${channelId}` : '/ws/terminal';
+    const ws = new WebSocket(`${protocol}://${location.host}${path}`);
+
+    ws.onopen = () => {
+      status.textContent = 'connected';
+    };
+
+    ws.onclose = () => {
+      status.textContent = 'disconnected';
+      terminal.write('\r\n\x1b[31m[disconnected]\x1b[0m\r\n');
+    };
+
+    ws.onerror = () => {
+      status.textContent = 'error';
+      terminal.write('\r\n\x1b[31m[websocket error]\x1b[0m\r\n');
+    };
+
+    ws.onmessage = (evt) => {
+      terminal.write(evt.data);
+    };
+
+    terminal.onData((data) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(data);
+      }
+    });
+
+    window.addEventListener('resize', () => terminal.focus());
+  </script>
+</body>
+</html>

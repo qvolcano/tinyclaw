@@ -1,0 +1,12 @@
+[[agents]]
+id = "codex"
+type = "terminal"
+shell = "codex"
+
+[[channels]]
+id = "codex-web"
+type = "web_terminal"
+agent_id = "codex"
+host = "0.0.0.0"
+port = 9001
+static_dir = "clients/web_terminal"

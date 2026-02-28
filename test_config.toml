@@ -1,0 +1,12 @@
+[[agents]]
+id = "ps-agent"
+type = "terminal"
+shell = "powershell.exe"
+
+[[channels]]
+id = "ps-web"
+type = "web_terminal"
+agent_id = "ps-agent"
+host = "127.0.0.1"
+port = 9101
+static_dir = "clients/web_terminal"
